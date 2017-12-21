@@ -1,0 +1,123 @@
+# Read: https://hub.docker.com/r/jupyter/scipy-notebook/
+# Tags: https://hub.docker.com/r/jupyter/scipy-notebook/tags/
+# https://github.com/jupyter/docker-stacks/tree/master/scipy-notebook
+
+FROM jupyter/scipy-notebook:033056e6d164
+
+LABEL maintainer="Troels Schwarz-Linnet <tlinnet@gmail.com>"
+
+# Set variables    
+ENV NB_USER jovyan
+ENV NB_UID 1000
+ENV HOME /home/${NB_USER}
+
+# Set root
+USER root
+
+# Get packages
+ENV BUILD_PACKAGES="curl wget unzip subversion git"
+
+# Install. # Install all packages in 1 RUN
+RUN echo "Installing these packages" $BUILD_PACKAGES && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set user back
+USER ${NB_USER}
+
+# Install conda packages for building RDKit for python 3
+# http://www.rdkit.org/docs/Install.html
+# https://github.com/rdkit/rdkit/blob/master/Docs/Book/Install.md
+# Boost 1.63 requires CMake 3.7 or newer
+# https://stackoverflow.com/questions/42123509/cmake-finds-boost-but-the-imported-targets-not-available-for-boost-version
+# https://anaconda.org/rdkit/boost
+RUN conda install -y numpy matplotlib && \
+    conda install -y cmake>=3.6 && \
+    conda install -y --channel rdkit boost && \
+    conda install -y --channel rdkit nox && \
+    conda install -y --channel rdkit cairo && \
+    conda install -y pillow && \
+    conda install -y anaconda && \
+    conda install -y --channel conda-forge eigen && \
+    conda install -y --channel conda-forge pkg-config
+
+# Get RDKit : http://www.rdkit.org/
+# We need to patch it.
+# https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms
+
+# Get RDKit Release_2017_09_2
+ENV RDKITV=Release_2017_09_2
+RUN echo "Installing RDKit" && \
+    wget https://github.com/rdkit/rdkit/archive/${RDKITV}.tar.gz && \
+    tar -xvzf ${RDKITV}.tar.gz && \
+    rm ${RDKITV}.tar.gz
+
+# Or try get old RDKit from Esben.
+#ENV RDKITV=Release_2015_09_2_mod
+#RUN echo "Installing RDKit" && \
+#    git clone --depth 1 https://github.com/EBjerrum/rdkit.git rdkit-${RDKITV}
+
+# Patch
+#svn export https://github.com/EBjerrum/pICalculax/trunk/rdkit_patch rdkit_patch
+#svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch
+#RUN cd rdkit-${RDKITV} && \
+#    svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch && \
+#    cp rdkit_patch/RDKit_Release_2017_09_2_atomic_data.cpp.patch .  && \
+#    #cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" && \
+#    git apply --stat RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+#    git apply --check RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+#    git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+#    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
+
+# Build RDKit
+# http://www.rdkit.org/docs/Install.html
+# cmake: build if you need to specify a non-default version of python
+# make : this builds all libraries, regression tests, and wrappers (by default).
+ENV PYROOT=/opt/conda
+ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
+
+RUN cd rdkit-${RDKITV} && \
+    mkdir build && \
+    cd build && \
+    # cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
+    cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON ..
+RUN cd rdkit-${RDKITV}/build && \
+    make
+#RUN cd rdkit-${RDKITV}/build && \
+#    make install 
+
+# Testing the build (optional, but recommended)
+# ENV RDBASE=$HOME/rdkit-${RDKITV}
+# RDBASE=$RDBASE DYLD_FALLBACK_LIBRARY_PATH="$RDBASE/lib:$PYROOT/lib" PYTHONPATH=$RDBASE ctest
+# cd rdkit-${RDKITV}/build
+# ./ctest
+
+# jupyter notebook password remove
+#RUN echo "" && \
+#    mkdir -p $HOME/.jupyter && \
+#    cd $HOME/.jupyter && \
+#    echo "c.NotebookApp.token = u''" > jupyter_notebook_config.py
+
+# Get from github:
+#RUN echo "" && \
+#    git clone --depth 1 https://github.com/EBjerrum/pICalculax.git
+
+# Make directory
+#RUN cd ${HOME} && \
+#    mkdir pICalculax
+
+# Copy files into images ${HOME}
+#COPY LICENSE ${HOME}/pICalculax
+#COPY README.md ${HOME}/pICalculax
+#COPY pICalculax.py ${HOME}/pICalculax
+#COPY Rules.py ${HOME}/pICalculax
+#COPY Example_Usage.py ${HOME}/pICalculax
+# Copy directories
+#COPY Datasets ${HOME}/pICalculax/Datasets
+##COPY mods_db ${HOME}/pICalculax/mods_db
+
+### Set root, and make folder writable
+#USER root
+#RUN chown -R ${NB_UID} ${HOME}
+#USER ${NB_USER}
