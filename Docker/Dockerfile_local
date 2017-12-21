@@ -32,15 +32,10 @@ USER ${NB_USER}
 # Boost 1.63 requires CMake 3.7 or newer
 # https://stackoverflow.com/questions/42123509/cmake-finds-boost-but-the-imported-targets-not-available-for-boost-version
 # https://anaconda.org/rdkit/boost
-RUN conda install -y numpy matplotlib && \
-    conda install -y cmake>=3.6 && \
-    conda install -y --channel rdkit boost && \
-    conda install -y --channel rdkit nox && \
-    conda install -y --channel rdkit cairo && \
-    conda install -y pillow && \
-    conda install -y anaconda && \
-    conda install -y --channel conda-forge eigen && \
-    conda install -y --channel conda-forge pkg-config
+RUN conda install -y cmake=3.9.4 pillow && \
+    conda install -y --channel rdkit boost nox cairo && \
+    conda install -y --channel conda-forge eigen pkg-config
+#conda install -y anaconda && \
 
 # Get RDKit : http://www.rdkit.org/
 # We need to patch it.
