@@ -5,7 +5,7 @@ Published in:<br>
 Esben J. Bjerrum , Jan Holst Jensen, and Jakob L. Tolborg<br>
 *J Chem Inf Model*. 2017 Aug 28;57(8):1723-1727. doi: [10.1021/acs.jcim.7b00030](http://dx.doi.org/10.1021/acs.jcim.7b00030). <br>
 
-For handling conversion of PLN to condensed molformat, [Proteax desktop](http://www.biochemfusion.com/products/proteax_desktop/) is needed.
+For handling conversion of *protein line notation* (PLN) to condensed molformat, [Proteax desktop](http://www.biochemfusion.com/products/proteax_desktop/) is needed.
 
 A modification database for import is found in the [mods_db](https://github.com/tlinnet/pICalculax/tree/docker/mods_db) directory
 
@@ -13,8 +13,8 @@ For handling condensed molfile formats, [RDKit needs to be patched](https://www.
 
 Example usage can be found in the file **Example_usage.py**
 
-
-## Example Usage interactive session
+# Example use
+## Interactive session
 
 ```python
 fasta = 'ICECREAM'
@@ -84,7 +84,7 @@ pIpred = pI(pkalist, charge)
 print(pIpred)
 ```
 
-#Command line usage
+## Command line
 
 ```bash
 $ python pICalculax.py -h
