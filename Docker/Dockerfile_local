@@ -11,11 +11,24 @@ ENV NB_USER jovyan
 ENV NB_UID 1000
 ENV HOME /home/${NB_USER}
 
+# Create a Python 2.x environment using conda including at least the ipython kernel and the kernda utility. 
+# https://github.com/jupyter/docker-stacks/wiki/Docker-Recipes
+RUN conda create --quiet --yes -p $CONDA_DIR/envs/python2 python=2.7 ipython ipykernel kernda && \
+    conda clean -tipsy
+
 # Set root
 USER root
 
 # Get packages
 ENV BUILD_PACKAGES="curl wget unzip subversion git"
+
+# For system python
+# For building RDKit: http://www.rdkit.org/docs/Install.html#building-from-source
+ENV BUILD_PACKAGES="$BUILD_PACKAGES build-essential python-numpy cmake python-dev sqlite3 libsqlite3-dev" 
+ENV BUILD_PACKAGES="$BUILD_PACKAGES libboost-dev libboost-system-dev libboost-thread-dev libboost-serialization-dev" 
+ENV BUILD_PACKAGES="$BUILD_PACKAGES libboost-python-dev libboost-regex-dev"
+ENV BUILD_PACKAGES="$BUILD_PACKAGES python-pil python-cairo"
+# libeigen3-dev python-pkgconfig python-gi-cairo
 
 # Install. # Install all packages in 1 RUN
 RUN echo "Installing these packages" $BUILD_PACKAGES && \
@@ -23,27 +36,36 @@ RUN echo "Installing these packages" $BUILD_PACKAGES && \
     apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
     rm -rf /var/lib/apt/lists/*
 
+# Create a global kernelspec in the image and modify it so that it properly activates
+# the python2 conda environment.
+RUN $CONDA_DIR/envs/python2/bin/python -m ipykernel install && \
+    /bin/bash -c "source activate python2 && kernda -o -y /opt/conda/envs/python2/share/jupyter/kernels/python2/kernel.json"
+
 # Set user back
 USER ${NB_USER}
 
-# Install conda packages for building RDKit for python 3
+# Install conda packages for building RDKit for python 2.7
 # http://www.rdkit.org/docs/Install.html
 # https://github.com/rdkit/rdkit/blob/master/Docs/Book/Install.md
 # Boost 1.63 requires CMake 3.7 or newer
 # https://stackoverflow.com/questions/42123509/cmake-finds-boost-but-the-imported-targets-not-available-for-boost-version
 # https://anaconda.org/rdkit/boost
-RUN conda install -y cmake=3.9.4 pillow && \
-    conda install -y --channel rdkit boost nox cairo && \
-    conda install -y --channel conda-forge eigen pkg-config
-#conda install -y anaconda && \
+RUN /bin/bash -c "source activate python2 && \
+    conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow"
+RUN /bin/bash -c "source activate python2 && \
+    conda install -y --channel rdkit boost nox cairo"
+RUN /bin/bash -c "source activate python2 && \
+    conda install -y --channel conda-forge eigen pkg-config"
+
+# Install conda packages for building RDKit for python 3.6
+#RUN conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow
+#RUN conda install -y --channel rdkit boost nox cairo
+#RUN conda install -y --channel conda-forge eigen pkg-config
 
 # Get RDKit : http://www.rdkit.org/
-# We need to patch it.
-# https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms
-
 # Get RDKit Release_2017_09_2
 ENV RDKITV=Release_2017_09_2
-RUN echo "Installing RDKit" && \
+RUN echo "Downloading RDKit" && \
     wget https://github.com/rdkit/rdkit/archive/${RDKITV}.tar.gz && \
     tar -xvzf ${RDKITV}.tar.gz && \
     rm ${RDKITV}.tar.gz
@@ -53,10 +75,12 @@ RUN echo "Installing RDKit" && \
 #RUN echo "Installing RDKit" && \
 #    git clone --depth 1 https://github.com/EBjerrum/rdkit.git rdkit-${RDKITV}
 
+# We need to patch it.
+# https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms
 # Patch
 #svn export https://github.com/EBjerrum/pICalculax/trunk/rdkit_patch rdkit_patch
 #svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch
-#RUN cd rdkit-${RDKITV} && \
+#RUN cd ${HOME}/rdkit-${RDKITV} && \
 #    svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch && \
 #    cp rdkit_patch/RDKit_Release_2017_09_2_atomic_data.cpp.patch .  && \
 #    #cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" && \
@@ -69,23 +93,49 @@ RUN echo "Installing RDKit" && \
 # http://www.rdkit.org/docs/Install.html
 # cmake: build if you need to specify a non-default version of python
 # make : this builds all libraries, regression tests, and wrappers (by default).
+ENV RDBASE="${HOME}/rdkit-${RDKITV}"
+ENV LD_LIBRARY_PATH="${RDBASE}/lib"
+ENV PYTHONPATH="${RDBASE}:${PYTHONPATH}"
 ENV PYROOT=/opt/conda
-ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
 
-RUN cd rdkit-${RDKITV} && \
-    mkdir build && \
-    cd build && \
-    # cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
-    cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON ..
-RUN cd rdkit-${RDKITV}/build && \
+# cmake options
+# cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
+
+# For system python
+ENV PYTHON_INCLUDE_DIR="/usr/include/python2.7"
+RUN cd $RDBASE && mkdir build && cd build \
+    /usr/bin/cmake --version && \
+    /usr/bin/cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR ..
+RUN cd $RDBASE/build && \
     make
-#RUN cd rdkit-${RDKITV}/build && \
+RUN cd $RDBASE/build && \
+    make install 
+
+# For conda python 2.7
+#ENV PYTHON_INCLUDE_DIR="${PYROOT}/envs/python2/include/python2.7"
+#RUN cd $RDBASE && mkdir build && cd build \
+#    cmake --version && which cmake && \
+#    /bin/bash -c "source activate python2 && \
+#    cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR .."
+#RUN cd $RDBASE/build && \
+#    make
+#RUN cd $RDBASE/build && \
+#    make install 
+
+# For conda python 3.6
+#ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
+#RUN cd $RDBASE && mkdir build && cd build \
+#    cmake --version && which cmake && \
+#    cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR ..
+#RUN cd $RDBASE/build && \
+#    make
+#RUN cd $RDBASE/build && \
 #    make install 
 
 # Testing the build (optional, but recommended)
 # ENV RDBASE=$HOME/rdkit-${RDKITV}
 # RDBASE=$RDBASE DYLD_FALLBACK_LIBRARY_PATH="$RDBASE/lib:$PYROOT/lib" PYTHONPATH=$RDBASE ctest
-# cd rdkit-${RDKITV}/build
+# cd ${HOME}/rdkit-${RDKITV}/build
 # ./ctest
 
 # jupyter notebook password remove
