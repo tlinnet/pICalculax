@@ -114,7 +114,8 @@ RUN cd $RDBASE/build && \
 # For conda python 2.7
 #ENV PYTHON_INCLUDE_DIR="${PYROOT}/envs/python2/include/python2.7"
 #RUN cd $RDBASE && mkdir build && cd build \
-#    cmake --version && which cmake && \
+#    /bin/bash -c "source activate python2 && \
+#    cmake --version && which cmake" && \
 #    /bin/bash -c "source activate python2 && \
 #    cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR .."
 #RUN cd $RDBASE/build && \
