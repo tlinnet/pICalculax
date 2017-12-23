@@ -155,3 +155,12 @@ ENV PATH=$OLDPATH
 # RDBASE=$RDBASE DYLD_FALLBACK_LIBRARY_PATH="$RDBASE/lib:$PYROOT/lib" PYTHONPATH=$RDBASE ctest
 # cd ${HOME}/rdkit-${RDKITV}/build
 # ./ctest
+
+# Install any missing system packages
+USER root
+ENV BUILD_PACKAGES="tk"
+RUN echo "Installing these packages" $BUILD_PACKAGES && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
+    rm -rf /var/lib/apt/lists/*
+USER ${NB_USER}

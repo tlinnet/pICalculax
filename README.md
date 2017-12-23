@@ -24,6 +24,8 @@ Example usage of **pICalculax** can be found in the file [Example_usage.py](http
 The easiest solution, is to use the service [mybinder.org](https://mybinder.org/), to launch an interactive Jupyter Notebook. [Click here or the icon for access for online environment. ](https://mybinder.org/v2/gh/tlinnet/pICalculax/docker?filepath=Example_Usage.ipynb
 )
 
+**This can take up to 10 min, since the image is quite large.**
+
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/tlinnet/pICalculax/docker?filepath=Example_Usage.ipynb)
 
 # How to use Docker
@@ -132,6 +134,8 @@ from __future__ import print_function
 from pICalculax import find_pKas, pI
 from rdkit import Chem
 from rdkit.Chem import Draw
+# https://github.com/rdkit/rdkit-tutorials/tree/master/notebooks
+from rdkit.Chem.Draw import IPythonConsole
 
 #Load a protein from SD file in condensed format
 sdsup = Chem.SDMolSupplier('pICalculax_dir/Datasets/example_mols.sdf')
@@ -143,9 +147,11 @@ def predict_show(mol):
 	piPred = pI(pkalist, charge)
 	#Report and Visualize
 	print("Predicted pI:%0.2F"%piPred)
-	Draw.ShowMol(mol, legend = "Predicted pI:%0.2F"%piPred)
-	Draw.tkRoot.update()
-	txt = raw_input('Press <ENTER> to continue')
+	# display is a Jupyter command 
+	display(mol)
+	#Draw.ShowMol(mol, legend = "Predicted pI:%0.2F"%piPred)
+	#Draw.tkRoot.update()
+	#txt = raw_input('Press <ENTER> to continue')
 
 # An unmodified peptide
 mol = sdsup[0]
