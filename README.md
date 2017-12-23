@@ -110,7 +110,7 @@ pIpred = pI(pkalist, charge)
 print(pIpred)
 ```
 
-## Interactive session with DISPLAY
+## Jupyter Notebook example with image
 The peptides can be loaded from a SDfile. <br>
 *Example usage of the pICalculax for pI prediction of unmodified and modified peptides*
 
