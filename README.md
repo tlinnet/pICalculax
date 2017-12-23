@@ -4,14 +4,15 @@ Isoelectric point (pI) predictor for chemically modified peptides and proteins.
 Published in:<br>
 Esben J. Bjerrum , Jan Holst Jensen, and Jakob L. Tolborg<br>
 *J Chem Inf Model*. 2017 Aug 28;57(8):1723-1727. doi: [10.1021/acs.jcim.7b00030](http://dx.doi.org/10.1021/acs.jcim.7b00030). <br>
+Available at [github.com/EBjerrum/pICalculax](https://github.com/EBjerrum/pICalculax)
 
-For handling conversion of *protein line notation* (PLN) to condensed molformat, [Proteax desktop](http://www.biochemfusion.com/products/proteax_desktop/) is needed.
+For handling condensed molfile formats, [RDKit](http://rdkit.org) needs to be [patched](https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms). Patch can be found in the [rdkit_patch](https://github.com/tlinnet/pICalculax/tree/docker/rdkit_patch) directory. 
 
-A modification database for import is found in the [mods_db](https://github.com/tlinnet/pICalculax/tree/docker/mods_db) directory
+Patching [RDKit](http://rdkit.org) can be diffucult. A docker image has been compiled by [Troels Schwarz-Linnet](github.com/tlinnet) and is available at [hub.docker.com/r/tlinnet/picalculax](https://hub.docker.com/r/tlinnet/picalculax)
 
-For handling condensed molfile formats, [RDKit needs to be patched](https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms). Patch can be found in the [rdkit_patch](https://github.com/tlinnet/pICalculax/tree/docker/rdkit_patch) directory.
+For handling conversion of *protein line notation* (PLN) to condensed molformat, [Proteax desktop](http://www.biochemfusion.com/products/proteax_desktop/) is needed. A modification database for Proteax Desktop import is found in the [mods_db](https://github.com/tlinnet/pICalculax/tree/docker/mods_db) directory
 
-Example usage can be found in the file **Example_usage.py**
+Example usage of **pICalculax** can be found in the file [Example_usage.py](https://github.com/EBjerrum/pICalculax/blob/master/Example_Usage.py)
 
 # Example use
 ## Interactive session
