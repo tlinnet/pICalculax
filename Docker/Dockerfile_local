@@ -27,8 +27,8 @@ ENV BUILD_PACKAGES="curl wget unzip subversion git"
 ENV BUILD_PACKAGES="$BUILD_PACKAGES build-essential python-numpy cmake python-dev sqlite3 libsqlite3-dev" 
 ENV BUILD_PACKAGES="$BUILD_PACKAGES libboost-dev libboost-system-dev libboost-thread-dev libboost-serialization-dev" 
 ENV BUILD_PACKAGES="$BUILD_PACKAGES libboost-python-dev libboost-regex-dev"
-ENV BUILD_PACKAGES="$BUILD_PACKAGES python-pil python-cairo"
-# libeigen3-dev python-pkgconfig python-gi-cairo
+ENV BUILD_PACKAGES="$BUILD_PACKAGES python-pil libcairo2-dev libeigen3-dev"
+# python-cairo python-pkgconfig python-gi-cairo
 
 # Install. # Install all packages in 1 RUN
 RUN echo "Installing these packages" $BUILD_PACKAGES && \
@@ -53,13 +53,13 @@ USER ${NB_USER}
 RUN /bin/bash -c "source activate python2 && \
     conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow"
 RUN /bin/bash -c "source activate python2 && \
-    conda install -y --channel rdkit boost=1.56 nox cairo"
+    conda install -y --channel rdkit boost nox cairo"
 RUN /bin/bash -c "source activate python2 && \
     conda install -y --channel conda-forge eigen pkg-config"
 
 # Install conda packages for building RDKit for python 3.6
 RUN conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow
-RUN conda install -y --channel rdkit boost=1.56 nox cairo
+RUN conda install -y --channel rdkit boost nox cairo
 RUN conda install -y --channel conda-forge eigen pkg-config
 
 # Get RDKit : http://www.rdkit.org/
@@ -89,25 +89,25 @@ RUN echo "Downloading RDKit" && \
 #    git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
 #    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
 
-USER root
-ENV BUILD_PACKAGES="libeigen3-dev"
-# python-pkgconfig python-gi-cairo
-RUN echo "Installing these packages" $BUILD_PACKAGES && \
-    apt-get update && \
-    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
-    rm -rf /var/lib/apt/lists/*
-USER ${NB_USER}
+# Install any missing system packages
+#USER root
+#ENV BUILD_PACKAGES=""
+#RUN echo "Installing these packages" $BUILD_PACKAGES && \
+#    apt-get update && \
+#    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
+#    rm -rf /var/lib/apt/lists/*
+#USER ${NB_USER}
 
 # Build RDKit
 # http://www.rdkit.org/docs/Install.html
 # cmake: build if you need to specify a non-default version of python
 # make : this builds all libraries, regression tests, and wrappers (by default).
 ENV RDBASE="${HOME}/rdkit-${RDKITV}"
-ENV PYTHONPATH="${RDBASE}:${PYTHONPATH}"
+ENV PYTHONPATH="${RDBASE}"
 ENV PYROOT=/opt/conda
 
 # cmake options
-# cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
+# cmake -D BOOST_ROOT=??? -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
 
 # For system python
 ENV OLDPATH=$PATH
@@ -117,11 +117,12 @@ ENV PYTHON_INCLUDE_DIR="/usr/include/python2.7"
 ENV LD_LIBRARY_PATH="${RDBASE}/build/lib:/usr/lib/x86_64-linux-gnu"
 RUN cd $RDBASE && mkdir build && cd build && \
     cmake --version && which cmake && \
-    cmake -D BOOST_ROOT=/usr/include/boost -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR ..
+    cmake -D BOOST_ROOT=/usr/include/boost -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON ..
 RUN cd $RDBASE/build && \
     make
-#RUN cd $RDBASE/build && \
-#    make install 
+RUN cd $RDBASE/build && \
+    make install 
+ENV PATH=$OLDPATH
 
 # For conda python 2.7
 #ENV PYTHON_INCLUDE_DIR="${PYROOT}/envs/python2/include/python2.7"
