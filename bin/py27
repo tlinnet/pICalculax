@@ -9,6 +9,6 @@ source activate python2
 
 # Run command
 python --version
-echo "Calling pICalculax.py with arguments:" "$@"
-python ${HOME}/pICalculax_dir/pICalculax.py "$@"
+echo "Calling python with arguments:" "$@"
+python "$@"
 
