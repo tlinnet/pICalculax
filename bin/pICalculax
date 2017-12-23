@@ -8,6 +8,7 @@ export PYTHONPATH
 source activate python2
 
 # Run command
-echo "$@"
-#python ${HOME}/pICalculax/pICalculax.py
+python --version
+echo "Calling pICalculax.py with arguments:" "$@"
+python ${HOME}/pICalculax_dir/pICalculax.py "$@"
 
