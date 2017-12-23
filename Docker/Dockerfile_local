@@ -53,13 +53,13 @@ USER ${NB_USER}
 RUN /bin/bash -c "source activate python2 && \
     conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow"
 RUN /bin/bash -c "source activate python2 && \
-    conda install -y --channel rdkit boost nox cairo"
+    conda install -y --channel rdkit boost=1.56 nox cairo"
 RUN /bin/bash -c "source activate python2 && \
     conda install -y --channel conda-forge eigen pkg-config"
 
 # Install conda packages for building RDKit for python 3.6
 RUN conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow
-RUN conda install -y --channel rdkit boost nox cairo
+RUN conda install -y --channel rdkit boost=1.56 nox cairo
 RUN conda install -y --channel conda-forge eigen pkg-config
 
 # Get RDKit : http://www.rdkit.org/
@@ -89,6 +89,15 @@ RUN echo "Downloading RDKit" && \
 #    git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
 #    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
 
+USER root
+ENV BUILD_PACKAGES="libeigen3-dev"
+# python-pkgconfig python-gi-cairo
+RUN echo "Installing these packages" $BUILD_PACKAGES && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
+    rm -rf /var/lib/apt/lists/*
+USER ${NB_USER}
+
 # Build RDKit
 # http://www.rdkit.org/docs/Install.html
 # cmake: build if you need to specify a non-default version of python
@@ -101,13 +110,16 @@ ENV PYROOT=/opt/conda
 # cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
 
 # For system python
-#ENV PYTHON_INCLUDE_DIR="/usr/include/python2.7"
-#ENV LD_LIBRARY_PATH="${RDBASE}/build/lib"
-#RUN cd $RDBASE && mkdir build && cd build \
-#    /usr/bin/cmake --version && \
-#    /usr/bin/cmake -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR ..
-#RUN cd $RDBASE/build && \
-#    make
+ENV OLDPATH=$PATH
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PYTHON_INCLUDE_DIR="/usr/include/python2.7"
+## LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
+ENV LD_LIBRARY_PATH="${RDBASE}/build/lib:/usr/lib/x86_64-linux-gnu"
+RUN cd $RDBASE && mkdir build && cd build && \
+    cmake --version && which cmake && \
+    cmake -D BOOST_ROOT=/usr/include/boost -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR ..
+RUN cd $RDBASE/build && \
+    make
 #RUN cd $RDBASE/build && \
 #    make install 
 
@@ -118,7 +130,7 @@ ENV PYROOT=/opt/conda
 #RUN cd $RDBASE && mkdir build && cd build && \
 #    /bin/bash -c "source activate python2 && \
 #    cmake --version && which cmake" && \
-#    /bin/bash -c "source activate python2 && \
+#    /bin/bash -c "source activate python2 &&  \
 #    cmake -D BOOST_ROOT=${PYROOT}/envs/python2/include -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR .."
 #RUN cd $RDBASE/build && \
 #    make
@@ -126,14 +138,14 @@ ENV PYROOT=/opt/conda
 #    make install 
 
 # For conda python 3.6
-ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
+#ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
 # LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
-ENV LD_LIBRARY_PATH="${RDBASE}/build/lib:${PYROOT}/lib"
-RUN cd $RDBASE && mkdir build && cd build && \
-    cmake --version && which cmake &&   \
-    cmake -D BOOST_ROOT=${PYROOT}/include -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR ..
-RUN cd $RDBASE/build && \
-    make
+#ENV LD_LIBRARY_PATH="${RDBASE}/build/lib:${PYROOT}/lib"
+#RUN cd $RDBASE && mkdir build && cd build && \
+#    cmake --version && which cmake &&   \
+#    cmake -D BOOST_ROOT=${PYROOT}/include -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR ..
+#RUN cd $RDBASE/build && \
+#    make
 #RUN cd $RDBASE/build && \
 #    make install 
 
