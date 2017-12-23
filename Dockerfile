@@ -30,6 +30,8 @@ COPY README.md ${HOME}/pICalculax_dir
 COPY pICalculax.py ${HOME}/pICalculax_dir
 COPY Rules.py ${HOME}/pICalculax_dir
 COPY Example_Usage.py ${HOME}/pICalculax_dir
+COPY Example_Usage.ipynb ${HOME}/pICalculax_dir
+COPY Example_Usage.ipynb ${HOME}
 # Copy directories
 COPY Datasets ${HOME}/pICalculax_dir/Datasets
 #COPY mods_db ${HOME}/pICalculax_dir/mods_db
