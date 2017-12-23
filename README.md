@@ -55,33 +55,6 @@ pi
 pi bash
 ```
 
-### Running on a mac with DISPLAY
-
-```bash
-# First make sure XQuartz is running
-open -a XQuartz
-# In XQuartz -> Preferences > Security, make sure the tick 
-# "Allow connections from network clients" is ON.
-
-# Then set DISPLAY options. First Start  XQuartz, if it is not running
-alias drx='open -a XQuartz; xhost + `ifconfig|grep "inet "|grep -v 127.0.0.1|cut -d" " -f2`'
-# Then run it
-drx
-
-# Then make alias and run.
-alias pi='docker run -ti --rm -p 8888:8888 -e DISPLAY=$(ifconfig|grep "inet "|grep -v 127.0.0.1|cut -d" " -f2):0 -v /tmp/.X11-unix:/tmp/.X11-unix -v "$PWD":/home/jovyan/work --name picalculax tlinnet/picalculax:02_picalculax'
-```
-
-Run it
-
-```bash
-# With no arguments, starts Jupyter notebook
-pi
-# Or else start bash, to start programs
-pi bash
-echo $DISPLAY
-```
-
 ## Interactive session
 
 Start Docker image, with activated python 2.7 environment
@@ -148,6 +121,7 @@ mol = sdsup[1]
 predict_show(mol)
 ```
 
+## Proteax Desktop example
 With Proteax Desktop protein line notation of modified peptides can be converted to a RDKit mol object and the pI predicted
 
 ```python
@@ -188,7 +162,7 @@ optional arguments:
   --pln PLN [PLN ...]   Predict PLN sequence (Requires Proteax Desktop)
 ```
 
-Try with FASTA
+With FASTA
 
 ```bash
 $ py27 pICalculax.py --fasta ICECREAM FATCAT
