@@ -46,7 +46,7 @@ RUN echo "Downloading RDKit" && \
 # https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms
 # Patch
 RUN cd ${HOME}/rdkit-${RDKITV} && \
-    svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch && \
+    svn export https://github.com/tlinnet/pICalculax/trunk/rdkit_patch rdkit_patch && \
     cp rdkit_patch/RDKit_Release_2017_09_2_atomic_data.cpp.patch .  && \
     #cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" && \
     git apply --stat RDKit_Release_2017_09_2_atomic_data.cpp.patch && \

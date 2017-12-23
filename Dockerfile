@@ -2,7 +2,7 @@
 # Tags: https://hub.docker.com/r/jupyter/scipy-notebook/tags/
 # https://github.com/jupyter/docker-stacks/tree/master/scipy-notebook
 # The Dockerfile for pre-setup.
-# https://github.com/tlinnet/pICalculax/blob/docker/Docker/Dockerfile_local
+# https://github.com/tlinnet/pICalculax/blob/master/Docker/Dockerfile_local
 
 FROM tlinnet/picalculax:01_setup
 
