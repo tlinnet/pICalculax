@@ -1,0 +1,85 @@
+# Read: https://hub.docker.com/r/jupyter/scipy-notebook/
+# Tags: https://hub.docker.com/r/jupyter/scipy-notebook/tags/
+# https://github.com/jupyter/docker-stacks/tree/master/scipy-notebook
+
+FROM jupyter/scipy-notebook:033056e6d164
+
+# Set variables    
+ENV NB_USER jovyan
+ENV NB_UID 1000
+ENV HOME /home/${NB_USER}
+
+# Set root
+USER root
+
+# Get packages
+ENV BUILD_PACKAGES="curl wget unzip subversion git"
+
+# Install. # Install all packages in 1 RUN
+RUN echo "Installing these packages" $BUILD_PACKAGES && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set user back
+USER ${NB_USER}
+
+# Install conda packages for building RDKit for python 3.6
+# http://www.rdkit.org/docs/Install.html
+# https://github.com/rdkit/rdkit/blob/master/Docs/Book/Install.md
+# Boost 1.63 requires CMake 3.7 or newer
+# https://stackoverflow.com/questions/42123509/cmake-finds-boost-but-the-imported-targets-not-available-for-boost-version
+# https://anaconda.org/rdkit/boost
+RUN conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow
+RUN conda install -y --channel rdkit boost nox cairo
+RUN conda install -y --channel conda-forge eigen pkg-config
+
+# Get RDKit : http://www.rdkit.org/
+# Get RDKit Release_2017_09_2
+ENV RDKITV=Release_2017_09_2
+RUN echo "Downloading RDKit" && \
+    wget https://github.com/rdkit/rdkit/archive/${RDKITV}.tar.gz && \
+    tar -xvzf ${RDKITV}.tar.gz && \
+    rm ${RDKITV}.tar.gz
+
+# We need to patch it.
+# https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms
+# Patch
+RUN cd ${HOME}/rdkit-${RDKITV} && \
+    svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch && \
+    cp rdkit_patch/RDKit_Release_2017_09_2_atomic_data.cpp.patch .  && \
+    #cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" && \
+    git apply --stat RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    git apply --check RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
+
+# Install any missing system packages
+#USER root
+#ENV BUILD_PACKAGES=""
+#RUN echo "Installing these packages" $BUILD_PACKAGES && \
+#    apt-get update && \
+#    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
+#    rm -rf /var/lib/apt/lists/*
+#USER ${NB_USER}
+
+# Build RDKit
+# http://www.rdkit.org/docs/Install.html
+# cmake: build if you need to specify a non-default version of python
+# make : this builds all libraries, regression tests, and wrappers (by default).
+ENV RDBASE="${HOME}/rdkit-${RDKITV}"
+ENV PYTHONPATH="${RDBASE}"
+ENV PYROOT=/opt/conda
+
+# cmake options
+# cmake -D BOOST_ROOT=??? -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
+
+# For conda python 3.6
+ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
+# LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
+ENV LD_LIBRARY_PATH="${RDBASE}/build/lib:${PYROOT}/lib"
+RUN cd $RDBASE && mkdir build && cd build && \
+    cmake --version && which cmake &&   \
+    cmake -D BOOST_ROOT=${PYROOT}/include -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR .. && \
+    make && \
+    make install 
