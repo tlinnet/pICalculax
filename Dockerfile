@@ -21,17 +21,18 @@ RUN echo "" && \
 
 # Make directory
 RUN cd ${HOME} && \
-    mkdir pICalculax
+    mkdir bin && \
+    mkdir pICalculax_dir
 
 # Copy files into images ${HOME}
-COPY LICENSE ${HOME}/pICalculax
-COPY README.md ${HOME}/pICalculax
-COPY pICalculax.py ${HOME}/pICalculax
-COPY Rules.py ${HOME}/pICalculax
-COPY Example_Usage.py ${HOME}/pICalculax
+COPY LICENSE ${HOME}/pICalculax_dir
+COPY README.md ${HOME}/pICalculax_dir
+COPY pICalculax.py ${HOME}/pICalculax_dir
+COPY Rules.py ${HOME}/pICalculax_dir
+COPY Example_Usage.py ${HOME}/pICalculax_dir
 # Copy directories
-COPY Datasets ${HOME}/pICalculax/Datasets
-#COPY mods_db ${HOME}/pICalculax/mods_db
+COPY Datasets ${HOME}/pICalculax_dir/Datasets
+#COPY mods_db ${HOME}/pICalculax_dir/mods_db
 
 # Copy over bin, add to sh path
 COPY bin/pICalculax ${HOME}/bin
@@ -39,5 +40,9 @@ ENV PATH="${HOME}/bin:${PATH}"
 
 ### Set root, and make folder writable
 USER root
-RUN chown -R ${NB_UID} ${HOME}
+RUN chown -R ${NB_UID}:users ${HOME}/bin
+RUN chown -R ${NB_UID}:users ${HOME}/pICalculax_dir
 USER ${NB_USER}
+
+# Possible set workdir
+# WORKDIR ${HOME}/pICalculax_dir
