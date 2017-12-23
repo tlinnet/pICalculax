@@ -6,23 +6,95 @@ Esben J. Bjerrum , Jan Holst Jensen, and Jakob L. Tolborg<br>
 *J Chem Inf Model*. 2017 Aug 28;57(8):1723-1727. doi: [10.1021/acs.jcim.7b00030](http://dx.doi.org/10.1021/acs.jcim.7b00030). <br>
 Available at [github.com/EBjerrum/pICalculax](https://github.com/EBjerrum/pICalculax)
 
+A docker image has been compiled by [Troels Schwarz-Linnet](github.com/tlinnet) and is available at [hub.docker.com/r/tlinnet/picalculax](https://hub.docker.com/r/tlinnet/picalculax). Proteax Desktop is NOT installed in the image.
+
+## Notes
+
 For handling condensed molfile formats, [RDKit](http://rdkit.org) needs to be [patched](https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms). Patch can be found in the [rdkit_patch](https://github.com/tlinnet/pICalculax/tree/docker/rdkit_patch) directory. 
 
-Patching [RDKit](http://rdkit.org) can be diffucult. A docker image has been compiled by [Troels Schwarz-Linnet](github.com/tlinnet) and is available at [hub.docker.com/r/tlinnet/picalculax](https://hub.docker.com/r/tlinnet/picalculax)
+Patching [RDKit](http://rdkit.org) can be diffucult. See the [Dockerfile how this was done](https://github.com/tlinnet/pICalculax/blob/docker/Docker/Dockerfile_local).
 
 For handling conversion of *protein line notation* (PLN) to condensed molformat, [Proteax desktop](http://www.biochemfusion.com/products/proteax_desktop/) is needed. A modification database for Proteax Desktop import is found in the [mods_db](https://github.com/tlinnet/pICalculax/tree/docker/mods_db) directory
 
 Example usage of **pICalculax** can be found in the file [Example_usage.py](https://github.com/EBjerrum/pICalculax/blob/master/Example_Usage.py)
 
 # Example use
+
+## Online use with mybinder.org
+
+The easiest solution, is to use the service [mybinder.org](https://mybinder.org/), to launch an interactive Jupyter Notebook. [Click here or the icon for access for online environment. ](https://mybinder.org/v2/gh/tlinnet/pICalculax/docker?filepath=Example_Usage.ipynb
+)
+
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/tlinnet/pICalculax/docker?filepath=Example_Usage.ipynb)
+
+## Use Docker
+
+Get prebuild image
+
+```bash
+docker pull tlinnet/picalculax:02_picalculax
+```
+
+Running docker with image
+[Link to run reference:](https://docs.docker.com/v1.11/engine/reference/commandline/run)
+
+### Running on a mac
+
+First make an alias
+
+```bash
+alias pi='docker run -ti --rm -p 8888:8888 -v "$PWD":/home/jovyan/work --name picalculax tlinnet/picalculax:02_picalculax'
+```
+
+Run it
+
+```bash
+# With no arguments, starts Jupyter notebook
+pi
+# Or else start bash, to start programs
+pi bash
+```
+
+### Running on a mac with DISPLAY
+
+```bash
+# First make sure XQuartz is running
+open -a XQuartz
+# In XQuartz -> Preferences > Security, make sure the tick 
+# "Allow connections from network clients" is ON.
+
+# Then set DISPLAY options. First Start  XQuartz, if it is not running
+alias drx='open -a XQuartz; xhost + `ifconfig|grep "inet "|grep -v 127.0.0.1|cut -d" " -f2`'
+# Then run it
+drx
+
+# Then make alias and run.
+alias pi='docker run -ti --rm -p 8888:8888 -e DISPLAY=$(ifconfig|grep "inet "|grep -v 127.0.0.1|cut -d" " -f2):0 -v /tmp/.X11-unix:/tmp/.X11-unix -v "$PWD":/home/jovyan/work --name picalculax tlinnet/picalculax:02_picalculax'
+```
+
+Run it
+
+```bash
+# With no arguments, starts Jupyter notebook
+pi
+# Or else start bash, to start programs
+pi bash
+echo $DISPLAY
+```
+
 ## Interactive session
 
-```python
-fasta = 'ICECREAM'
+Start Docker image, with activated python 2.7 environment
 
+```bash
+pi py27
+```
+
+```python
 from pICalculax import find_pKas, pI
 from rdkit import Chem
 
+fasta = 'ICECREAM'
 mol = Chem.MolFromFASTA(fasta)
 
 #find pKa values and charge class
@@ -33,12 +105,21 @@ pIpred = pI(pkalist, charge)
 print(pIpred)
 ```
 
+## Interactive session with DISPLAY
 The peptides can be loaded from a SDfile
 
-```python
-#!/usr/bin/python
-""" Example usage of the pICalculax for pI prediction of unmodified and modified peptides """
+Start Docker image, and go into **work** directory. The above command should mount your **host PWD directory** into the **image work directory**. Note, this example expects that **host PWD directory** contains folder **'Datasets/example_mols.sdf'**
 
+```bash
+pi bash
+cd work
+# Start activated python 2.7 environment
+py27
+```
+
+*Example usage of the pICalculax for pI prediction of unmodified and modified peptides*
+
+```python
 from __future__ import print_function
 from pICalculax import find_pKas, pI
 from rdkit import Chem
@@ -87,8 +168,15 @@ print(pIpred)
 
 ## Command line
 
+Start Docker image, with activated python 2.7 environment
+
 ```bash
-$ python pICalculax.py -h
+pi bash
+cd pICalculax_dir
+```
+
+```bash
+$ py27 pICalculax.py -h
 usage: pICalculax.py [-h] [--fasta FASTA [FASTA ...]] [--pln PLN [PLN ...]]
 
 Predict isoeletric point pI of peptides and modified peptides
@@ -98,14 +186,20 @@ optional arguments:
   --fasta FASTA [FASTA ...]
                         Predict fasta sequence
   --pln PLN [PLN ...]   Predict PLN sequence (Requires Proteax Desktop)
+```
 
-#Fasta
-$ python pICalculax.py --fasta ICECREAM FATCAT
+Try with FASTA
+
+```bash
+$ py27 pICalculax.py --fasta ICECREAM FATCAT
 4.14 	ICECREAM
 5.02 	FATCAT
+```
 
-#Protein line notation (Requires Proteax Desktop)
-$ python pICalculax.py --pln H-GHANYEA-OH H-GHANY[Gla]A-OH
+Protein line notation (Requires Proteax Desktop)
+
+```bash
+$ py27 pICalculax.py --pln H-GHANYEA-OH H-GHANY[Gla]A-OH
 5.41 	H-GHANYEA-OH
 4.77 	H-GHANY[Gla]A-OH
 ```
