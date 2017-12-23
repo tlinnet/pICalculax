@@ -36,6 +36,7 @@ COPY Datasets ${HOME}/pICalculax_dir/Datasets
 
 # Copy over bin, add to sh path
 COPY bin/pICalculax ${HOME}/bin
+COPY bin/py27 ${HOME}/bin
 ENV PATH="${HOME}/bin:${PATH}"
 
 ### Set root, and make folder writable
