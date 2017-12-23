@@ -132,7 +132,6 @@ Then do as follow:
 The peptides can be loaded from a SDfile.
 
 ```python
-from __future__ import print_function
 from pICalculax import find_pKas, pI
 from rdkit import Chem
 from rdkit.Chem import Draw
@@ -140,20 +139,25 @@ from rdkit.Chem import Draw
 from rdkit.Chem.Draw import IPythonConsole
 
 #Load a protein from SD file in condensed format
-sdsup = Chem.SDMolSupplier('pICalculax_dir/Datasets/example_mols.sdf')
+import os.path
+paths = ['Datasets/example_mols.sdf', 'pICalculax_dir/Datasets/example_mols.sdf', '../pICalculax_dir/Datasets/example_mols.sdf']
+for path in paths:
+    if os.path.exists(path):
+        sdsup = Chem.SDMolSupplier(path)
+        break
 
 def predict_show(mol):
-	#Get list of identified pKa values and charge
-	pkalist, charge = find_pKas(mol)
-	#Predict the pI from the identified pKa values
-	piPred = pI(pkalist, charge)
-	#Report and Visualize
-	print("Predicted pI:%0.2F"%piPred)
-	# display is a Jupyter command 
-	display(mol)
-	#Draw.ShowMol(mol, legend = "Predicted pI:%0.2F"%piPred)
-	#Draw.tkRoot.update()
-	#txt = raw_input('Press <ENTER> to continue')
+    #Get list of identified pKa values and charge
+    pkalist, charge = find_pKas(mol)
+    #Predict the pI from the identified pKa values
+    piPred = pI(pkalist, charge)
+    #Report and Visualize
+    print("Predicted pI:%0.2F"%piPred)
+    # display is a Jupyter command 
+    display(mol)
+    #Draw.ShowMol(mol, legend = "Predicted pI:%0.2F"%piPred)
+    #Draw.tkRoot.update()
+    #txt = raw_input('Press <ENTER> to continue')
 
 # An unmodified peptide
 mol = sdsup[0]
