@@ -1,0 +1,65 @@
+cmake version 3.9.4
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+/opt/conda/envs/python2/bin/cmake
+-- The C compiler identification is GNU 5.4.0
+-- The CXX compiler identification is GNU 5.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Check if the system is big endian
+-- Searching 16 bit integer
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for stdint.h
+-- Looking for stdint.h - found
+-- Looking for stddef.h
+-- Looking for stddef.h - found
+-- Check size of unsigned short
+-- Check size of unsigned short - done
+-- Using unsigned short
+-- Check if the system is big endian - little endian
+-- Found PythonInterp: /opt/conda/envs/python2/bin/python (found version "2.7.14") 
+-- Found PythonLibs: /opt/conda/envs/python2/lib/libpython2.7.so (found version "2.7.14") 
+-- Boost version: 1.56.0
+-- Found the following Boost libraries:
+--   python
+-- Found Eigen3: /usr/include/eigen3 (Required is at least version "2.91.0") 
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Looking for pthread_create
+-- Looking for pthread_create - not found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
+-- Boost version: 1.56.0
+-- Found the following Boost libraries:
+--   thread
+--   system
+-- Boost version: 1.56.0
+-- Found the following Boost libraries:
+--   serialization
+== Using strict rotor definition
+== Updating Filters.cpp from pains file
+== Done updating pains files
+-- Boost version: 1.56.0
+-- Found the following Boost libraries:
+--   regex
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/jovyan/rdkit-Release_2017_09_2/build
+Removing intermediate container 5db9ad2d0437
+ ---> aaad9820d90e
+Successfully built aaad9820d90e
+Successfully tagged tlinnet/picalculax:01_setup
