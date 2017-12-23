@@ -12,7 +12,7 @@ A docker image has been compiled by [Troels Schwarz-Linnet](github.com/tlinnet) 
 
 For handling condensed molfile formats, [RDKit](http://rdkit.org) needs to be [patched](https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms). Patch can be found in the [rdkit_patch](https://github.com/tlinnet/pICalculax/tree/docker/rdkit_patch) directory. 
 
-Patching [RDKit](http://rdkit.org) can be diffucult. See the [Dockerfile how this was done](https://github.com/tlinnet/pICalculax/blob/docker/Docker/Dockerfile_local).
+Patching [RDKit](http://rdkit.org) can be difficucult. See the [Dockerfile how this was done](https://github.com/tlinnet/pICalculax/blob/docker/Docker/Dockerfile_local).
 
 For handling conversion of *protein line notation* (PLN) to condensed molformat, [Proteax desktop](http://www.biochemfusion.com/products/proteax_desktop/) is needed. A modification database for Proteax Desktop import is found in the [mods_db](https://github.com/tlinnet/pICalculax/tree/docker/mods_db) directory
 
@@ -21,12 +21,12 @@ Example usage of **pICalculax** can be found in the file [Example_usage.py](http
 
 # Online use with mybinder.org
 
-The easiest solution, is to use the service [mybinder.org](https://mybinder.org/), to launch an interactive Jupyter Notebook. [Click here or the icon for access for online environment. ](https://mybinder.org/v2/gh/tlinnet/pICalculax/docker?filepath=Example_Usage.ipynb
+The easiest solution, is to use the service [mybinder.org](https://mybinder.org/), to launch an interactive Jupyter Notebook. [Click here or the icon for access for online environment. ](https://mybinder.org/v2/gh/tlinnet/pICalculax/master?filepath=Example_Usage.ipynb
 )
 
 **This can take up to 10 min, since the image is quite large.**
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/tlinnet/pICalculax/docker?filepath=Example_Usage.ipynb)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/tlinnet/pICalculax/master?filepath=Example_Usage.ipynb)
 
 # How to use Docker
 
@@ -115,7 +115,7 @@ print(pIpred)
 ## Jupyter Notebook example with image
 *Example usage of the pICalculax for pI prediction of unmodified and modified peptides*
 
-![alt text](https://raw.githubusercontent.com/tlinnet/pICalculax/docker/docs/images/image01.png "Images in Jupyter")
+![alt text](https://raw.githubusercontent.com/tlinnet/pICalculax/master/docs/images/image01.png "Images in Jupyter")
 
 Start image with Jupyter notebook
 
@@ -127,7 +127,7 @@ Then do as follow:
 
 * In your browser, go to [0.0.0.0:8888](http://0.0.0.0:8888)
 * Click **New** --> **Python 2**
-* Past in from below
+* Paste in from below
 
 The peptides can be loaded from a SDfile.
 
