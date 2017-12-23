@@ -113,8 +113,9 @@ print(pIpred)
 ```
 
 ## Jupyter Notebook example with image
-The peptides can be loaded from a SDfile. <br>
 *Example usage of the pICalculax for pI prediction of unmodified and modified peptides*
+
+![alt text](https://raw.githubusercontent.com/tlinnet/pICalculax/docker/docs/images/image01.png "Images in Jupyter")
 
 Start image with Jupyter notebook
 
@@ -128,6 +129,7 @@ Then do as follow:
 * Click **New** --> **Python 2**
 * Past in from below
 
+The peptides can be loaded from a SDfile.
 
 ```python
 from __future__ import print_function
