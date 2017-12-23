@@ -39,6 +39,9 @@ COPY bin/pICalculax ${HOME}/bin
 COPY bin/py27 ${HOME}/bin
 ENV PATH="${HOME}/bin:${PATH}"
 
+# Add to PYTHONPATH, so python can find the pICalculax.py file
+ENV PYTHONPATH="${HOME}/pICalculax_dir:${PYTHONPATH}"
+
 ### Set root, and make folder writable
 USER root
 RUN chown -R ${NB_UID}:users ${HOME}/bin

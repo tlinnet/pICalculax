@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# Add to PYTHONPATH
-PYTHONPATH="${HOME}/pICalculax_dir:${PYTHONPATH}"
-export PYTHONPATH
-
 # Activate python2
 source activate python2
 
