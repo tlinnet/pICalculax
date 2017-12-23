@@ -80,14 +80,14 @@ RUN echo "Downloading RDKit" && \
 # Patch
 #svn export https://github.com/EBjerrum/pICalculax/trunk/rdkit_patch rdkit_patch
 #svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch
-#RUN cd ${HOME}/rdkit-${RDKITV} && \
-#    svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch && \
-#    cp rdkit_patch/RDKit_Release_2017_09_2_atomic_data.cpp.patch .  && \
-#    #cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" && \
-#    git apply --stat RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
-#    git apply --check RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
-#    git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
-#    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
+RUN cd ${HOME}/rdkit-${RDKITV} && \
+    svn export https://github.com/tlinnet/pICalculax/branches/docker/rdkit_patch rdkit_patch && \
+    cp rdkit_patch/RDKit_Release_2017_09_2_atomic_data.cpp.patch .  && \
+    #cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" && \
+    git apply --stat RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    git apply --check RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
 
 # Install any missing system packages
 #USER root
@@ -155,32 +155,3 @@ ENV PATH=$OLDPATH
 # RDBASE=$RDBASE DYLD_FALLBACK_LIBRARY_PATH="$RDBASE/lib:$PYROOT/lib" PYTHONPATH=$RDBASE ctest
 # cd ${HOME}/rdkit-${RDKITV}/build
 # ./ctest
-
-# jupyter notebook password remove
-#RUN echo "" && \
-#    mkdir -p $HOME/.jupyter && \
-#    cd $HOME/.jupyter && \
-#    echo "c.NotebookApp.token = u''" > jupyter_notebook_config.py
-
-# Get from github:
-#RUN echo "" && \
-#    git clone --depth 1 https://github.com/EBjerrum/pICalculax.git
-
-# Make directory
-#RUN cd ${HOME} && \
-#    mkdir pICalculax
-
-# Copy files into images ${HOME}
-#COPY LICENSE ${HOME}/pICalculax
-#COPY README.md ${HOME}/pICalculax
-#COPY pICalculax.py ${HOME}/pICalculax
-#COPY Rules.py ${HOME}/pICalculax
-#COPY Example_Usage.py ${HOME}/pICalculax
-# Copy directories
-#COPY Datasets ${HOME}/pICalculax/Datasets
-##COPY mods_db ${HOME}/pICalculax/mods_db
-
-### Set root, and make folder writable
-#USER root
-#RUN chown -R ${NB_UID} ${HOME}
-#USER ${NB_USER}
