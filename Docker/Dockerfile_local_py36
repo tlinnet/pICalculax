@@ -13,7 +13,7 @@ ENV HOME /home/${NB_USER}
 USER root
 
 # Get packages
-ENV BUILD_PACKAGES="curl wget unzip subversion git"
+ENV BUILD_PACKAGES="curl wget unzip subversion git tk"
 
 # Install. # Install all packages in 1 RUN
 RUN echo "Installing these packages" $BUILD_PACKAGES && \
@@ -30,9 +30,17 @@ USER ${NB_USER}
 # Boost 1.63 requires CMake 3.7 or newer
 # https://stackoverflow.com/questions/42123509/cmake-finds-boost-but-the-imported-targets-not-available-for-boost-version
 # https://anaconda.org/rdkit/boost
-RUN conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow
-RUN conda install -y --channel rdkit boost nox cairo
-RUN conda install -y --channel conda-forge eigen pkg-config
+#RUN conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow
+#RUN conda install -y --channel rdkit boost nox cairo
+#RUN conda install -y --channel conda-forge eigen pkg-config
+
+# See build by Greg
+# https://github.com/rdkit/rdkit_containers/blob/master/docker/centos7_py3build/Dockerfile
+#RUN conda install -y nomkl numpy=1.10 pillow cairocffi pandas boost=1.56
+RUN conda install --yes \
+    anaconda numpy matplotlib cmake=3.9.4 pillow nomkl cairocffi pandas eigen pkg-config boost && \
+    #conda install --yes --channel rdkit boost=1.56 nox cairo && \
+    conda clean -tipsy
 
 # Get RDKit : http://www.rdkit.org/
 # Get RDKit Release_2017_09_2
@@ -54,15 +62,6 @@ RUN cd ${HOME}/rdkit-${RDKITV} && \
     git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
     cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
 
-# Install any missing system packages
-#USER root
-#ENV BUILD_PACKAGES=""
-#RUN echo "Installing these packages" $BUILD_PACKAGES && \
-#    apt-get update && \
-#    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
-#    rm -rf /var/lib/apt/lists/*
-#USER ${NB_USER}
-
 # Build RDKit
 # http://www.rdkit.org/docs/Install.html
 # cmake: build if you need to specify a non-default version of python
@@ -71,15 +70,22 @@ ENV RDBASE="${HOME}/rdkit-${RDKITV}"
 ENV PYTHONPATH="${RDBASE}"
 ENV PYROOT=/opt/conda
 
-# cmake options
-# cmake -D BOOST_ROOT=??? -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON -D RDK_BUILD_INCHI_SUPPORT=ON ..
-
 # For conda python 3.6
-ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
+#ENV PYTHON_INCLUDE_DIR="${PYROOT}/include/python3.6m"
 # LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
-ENV LD_LIBRARY_PATH="${RDBASE}/build/lib:${PYROOT}/lib"
+#ENV LD_LIBRARY_PATH="${RDBASE}/build/lib:${PYROOT}/lib"
 RUN cd $RDBASE && mkdir build && cd build && \
-    cmake --version && which cmake &&   \
-    cmake -D BOOST_ROOT=${PYROOT}/include -D PYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR .. && \
+    cmake --version && which cmake && \
+    cmake -D BOOST_ROOT=${PYROOT} -D EIGEN3_INCLUDE_DIR=${PYROOT}/include/eigen3 \
+    -D PYTHON_EXECUTABLE=${PYROOT}/bin/python -D PYTHON_INCLUDE_DIR=${PYROOT}/include/python3.6m \
+    -D PYTHON_LIBRARY=${PYROOT}/lib/libpython3.6m.so -D PYTHON_NUMPY_INCLUDE_PATH=${PYROOT}/lib/python3.6/site-packages/numpy/core/include \
+    -D Boost_NO_SYSTEM_PATHS=ON -D RDK_BUILD_CAIRO_SUPPORT=ON -D RDK_BUILD_AVALON_SUPPORT=ON \
+    -D RDK_BUILD_INCHI_SUPPORT=ON -D RDK_BUILD_THREADSAFE_SSS=on -D RDK_TEST_MULTITHREADED=ON \
+    -D RDK_BUILD_PYTHON_WRAPPERS=ON .. 
+RUN cd $RDBASE && cd build && \
     make && \
     make install 
+
+# Testing the build (optional, but recommended)
+#RUN cd $RDBASE && cd build && \
+#    ctest --output-on-failure
