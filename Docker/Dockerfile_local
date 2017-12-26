@@ -85,6 +85,8 @@ RUN cd ${HOME}/rdkit-${RDKITV} && \
     git apply --stat RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
     git apply --check RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
     git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    sed -i.bak '/113\tUut/d' Code/GraphMol/atomic_data.cpp && \
+    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "Uut" && \
     cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
 
 # Install any missing system packages
