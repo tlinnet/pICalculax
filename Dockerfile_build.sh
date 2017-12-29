@@ -2,7 +2,7 @@
 
 # Build initial
 cd Docker
-docker build -t $USER/picalculax:01_setup -f Dockerfile_local .
+docker build -t tlinnet/picalculax:01_setup -f Dockerfile_local .
 cd ..
 
 # Build user setup
