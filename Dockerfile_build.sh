@@ -1,5 +1,10 @@
 # To build this image, source the file
 
+# Build initial
+cd Docker
+docker build -t $USER/picalculax:01_setup -f Dockerfile_local .
+cd ..
+
 # Build user setup
 docker build -t $USER/picalculax:02_picalculax -f Dockerfile .
 # Start Jupyter Notebook
