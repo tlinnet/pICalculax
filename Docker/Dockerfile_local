@@ -39,7 +39,8 @@ RUN echo "Installing these packages" $BUILD_PACKAGES && \
 # For the python2 conda environment, create a global kernelspec in the image 
 # and modify it so that it properly activates.
 RUN $CONDA_DIR/envs/python2/bin/python -m ipykernel install && \
-    /bin/bash -c "source activate python2 && kernda -o -y /opt/conda/envs/python2/share/jupyter/kernels/python2/kernel.json"
+    /bin/bash -c "source activate python2 && \
+    kernda -o -y /opt/conda/envs/python2/share/jupyter/kernels/python2/kernel.json"
 
 # Set user back
 USER ${NB_USER}
@@ -50,17 +51,21 @@ USER ${NB_USER}
 # Boost 1.63 requires CMake 3.7 or newer
 # https://stackoverflow.com/questions/42123509/cmake-finds-boost-but-the-imported-targets-not-available-for-boost-version
 # https://anaconda.org/rdkit/boost
-RUN /bin/bash -c "source activate python2 && \
-    conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow"
-RUN /bin/bash -c "source activate python2 && \
-    conda install -y --channel rdkit boost nox cairo"
-RUN /bin/bash -c "source activate python2 && \
-    conda install -y --channel conda-forge eigen pkg-config"
+RUN echo "Installing for python 2" && \
+    /bin/bash -c "source activate python2 && \
+    conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow" && \
+    /bin/bash -c "source activate python2 && \
+    conda install -y --channel rdkit boost nox cairo" && \
+    /bin/bash -c "source activate python2 && \
+    conda install -y --channel conda-forge eigen pkg-config" && \
+    conda clean -tipsy
 
 # Install conda packages for building RDKit for python 3.6
-RUN conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow
-RUN conda install -y --channel rdkit boost nox cairo
-RUN conda install -y --channel conda-forge eigen pkg-config
+RUN echo "Installing for python 3" && \
+    conda install -y anaconda numpy matplotlib cmake=3.9.4 pillow && \
+    conda install -y --channel rdkit boost nox cairo && \
+    conda install -y --channel conda-forge eigen pkg-config && \
+    conda clean -tipsy
 
 # Get RDKit : http://www.rdkit.org/
 # Get RDKit Release_2017_09_2
@@ -70,33 +75,22 @@ RUN echo "Downloading RDKit" && \
     tar -xvzf ${RDKITV}.tar.gz && \
     rm ${RDKITV}.tar.gz
 
-# Or try get old RDKit from Esben.
-#ENV RDKITV=Release_2015_09_2_mod
-#RUN echo "Installing RDKit" && \
-#    git clone --depth 1 https://github.com/EBjerrum/rdkit.git rdkit-${RDKITV}
-
 # We need to patch it.
 # https://www.wildcardconsulting.dk/useful-information/learn-how-to-hack-rdkit-to-handle-peptides-with-pseudo-atoms
 # Patch
 RUN cd ${HOME}/rdkit-${RDKITV} && \
     svn export https://github.com/tlinnet/pICalculax/trunk/rdkit_patch rdkit_patch && \
     cp rdkit_patch/RDKit_Release_2017_09_2_atomic_data.cpp.patch .  && \
-    #cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" && \
+    # Check before apply
     git apply --stat RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
     git apply --check RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    # Apply
     git apply RDKit_Release_2017_09_2_atomic_data.cpp.patch && \
+    # Remove atom 113
     sed -i.bak '/113\tUut/d' Code/GraphMol/atomic_data.cpp && \
+    # Print info
     cat Code/GraphMol/atomic_data.cpp | grep -A 20 "Uut" && \
-    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171" 
-
-# Install any missing system packages
-#USER root
-#ENV BUILD_PACKAGES=""
-#RUN echo "Installing these packages" $BUILD_PACKAGES && \
-#    apt-get update && \
-#    apt-get install --no-install-recommends -y $BUILD_PACKAGES && \
-#    rm -rf /var/lib/apt/lists/*
-#USER ${NB_USER}
+    cat Code/GraphMol/atomic_data.cpp | grep -A 20 "^171"
 
 # Build RDKit
 # http://www.rdkit.org/docs/Install.html
@@ -111,47 +105,45 @@ ENV PYROOT=/opt/conda
 # For system python
 ENV OLDPATH=$PATH
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-## LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
-#ENV LD_LIBRARY_PATH="${RDBASE}/lib:/usr/lib/x86_64-linux-gnu"
 RUN cd $RDBASE && mkdir build && cd build && \
     cmake --version && which cmake && \
-    cmake -D BOOST_ROOT=/usr/include -D PYTHON_INCLUDE_DIR=/usr/include/python2.7 -D RDK_BUILD_CAIRO_SUPPORT=ON ..
-RUN cd $RDBASE/build && \
-    make
-RUN cd $RDBASE/build && \
-    make install 
+    cmake -D BOOST_ROOT=/usr/include -D PYTHON_INCLUDE_DIR=/usr/include/python2.7 -D RDK_BUILD_CAIRO_SUPPORT=ON .. && \
+    make && \
+    make install
+# Set path, to be able to import in python
 ENV PATH=$OLDPATH
 
-# Set path, to be able to import in python
-ENV PYTHONPATH="${RDBASE}"
-ENV LD_LIBRARY_PATH="${RDBASE}/lib"
+# Build again, with possible change to atomic_data.cpp
+COPY atomic_data.cpp ${HOME}/rdkit-${RDKITV}/Code/GraphMol/atomic_data.cpp
+RUN cd $RDBASE/build && \
+    make && \
+    make install
 
 # For conda python 2.7
-# LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
-#ENV LD_LIBRARY_PATH="${RDBASE}/lib:${PYROOT}/envs/python2/lib"
 #RUN cd $RDBASE && mkdir build && cd build && \
 #    /bin/bash -c "source activate python2 && \
 #    cmake --version && which cmake" && \
 #    /bin/bash -c "source activate python2 &&  \
 #    cmake -D BOOST_ROOT=${PYROOT}/envs/python2/include -D PYTHON_INCLUDE_DIR=${PYROOT}/envs/python2/include/python2.7 .."
-#RUN cd $RDBASE/build && \
-#    make
-#RUN cd $RDBASE/build && \
+#    make && \
 #    make install 
 
 # For conda python 3.6
-# LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
-#ENV LD_LIBRARY_PATH="${RDBASE}/lib:${PYROOT}/lib"
 #RUN cd $RDBASE && mkdir build && cd build && \
-#    cmake --version && which cmake &&   \
-#    cmake -D BOOST_ROOT=${PYROOT}/include -D PYTHON_INCLUDE_DIR=${PYROOT}/include/python3.6m ..
-#RUN cd $RDBASE/build && \
-#    make
-#RUN cd $RDBASE/build && \
-#    make install 
+#    cmake --version && which cmake && \
+#    cmake -D BOOST_ROOT=${PYROOT}/include -D PYTHON_INCLUDE_DIR=${PYROOT}/include/python3.6m .. && \
+#    make && \
+#    make install
+
+# LD_LIBRARY_PATH: make sure it includes $RDBASE/lib and wherever the boost shared libraries are
+ENV LD_LIBRARY_PATH="${RDBASE}/lib"
+#ENV LD_LIBRARY_PATH="${RDBASE}/lib:/usr/lib/x86_64-linux-gnu"
+#ENV LD_LIBRARY_PATH="${RDBASE}/lib:${PYROOT}/envs/python2/lib"
+#ENV LD_LIBRARY_PATH="${RDBASE}/lib:${PYROOT}/lib"
+# Add the library of rdkit to pythonpath
+ENV PYTHONPATH="${RDBASE}"
 
 # Testing the build (optional, but recommended)
-# ENV RDBASE=$HOME/rdkit-${RDKITV}
 # RDBASE=$RDBASE DYLD_FALLBACK_LIBRARY_PATH="$RDBASE/lib:$PYROOT/lib" PYTHONPATH=$RDBASE ctest
 # cd ${HOME}/rdkit-${RDKITV}/build
 # ./ctest
